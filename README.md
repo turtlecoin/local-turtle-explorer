@@ -1,5 +1,7 @@
 # local-turtle-explorer
 
+If you are a TRTL, explorer other TRTLs locally!
+
 Just download and extract the release .zip file. You will find Local_Turtle_Explorer.exe there.
 
 When you start the local explorer, it will initiate the RPC daemon itself, there is nothing else you need to do.
