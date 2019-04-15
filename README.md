@@ -11,7 +11,7 @@ If you find any issue or have a request or suggestion please submit a new issue 
 
 Once you open the local explorer, it will take you to the start screen.
 
-Your TurtleCoind daemon is set to your local host at prot 11898.
+Your TurtleCoind daemon is set to your local host at port 11898.
 
 Simply click *Start Explorer* to start the program.
 
