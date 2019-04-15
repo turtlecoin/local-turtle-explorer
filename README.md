@@ -45,13 +45,13 @@ Click search at the buttom and it will take you to the search screen.
 
 Just enter the hash or block height and you can begin to search.
 
-#####Search for block
+##### Search for block
 ![alt text](img/readme_img/Search_screen_block.PNG)
 
-#####Search for transaction
+##### Search for transaction
 ![alt text](img/readme_img/Search_screen_tx.PNG)
 
-#####If you provide a invalid hash or height you will get an error
+##### If you provide a invalid hash or height you will get an error
 ![alt text](img/readme_img/Search_screen_tx_error.PNG)
 
 #### Note: *the yellow texts in the program are clickable. Once clicked, it will search the transaction or block for you accordingly. This includes the texts in the transaction pool and recent block screen.*
