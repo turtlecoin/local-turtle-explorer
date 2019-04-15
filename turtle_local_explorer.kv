@@ -1,0 +1,657 @@
+#:import NoTransition kivy.uix.screenmanager.NoTransition
+#File name: turtle_local_explorer.py
+#:kivy 1.10.1
+
+#manage screen names and ids
+
+ScreenManagement:
+	startscreen:startscreen
+	mainscreen:mainscreen
+	searchscreen:searchscreen
+	daemonscreen:daemonscreen
+	transition: NoTransition()
+	StartScreen:
+		id: startscreen
+		name: 'startscreen'
+	MainScreen:
+		id: mainscreen
+		name: 'mainscreen'
+	SearchScreen:
+		id: searchscreen
+		name: 'searchscreen'		
+	DaemonScreen:
+		id: daemonscreen
+		name: 'daemonscreen'
+
+		
+#main container for pages
+<MyContainer@RelativeLayout>:
+    size_hint:0.4,0.7
+    pos_hint: {"x":0.3,"y":0.18}
+    canvas:
+        Color:
+            rgba: 0, 1, 1, 0.1
+        Rectangle:
+            size: self.size
+		
+		
+#main screen background
+<BackGround@FloatLayout>:
+    Widget:
+        size:self.size
+        pos:self.pos
+        canvas.before:
+            Rectangle:
+                size: 362, 401
+                pos:(root.center_x-(362*0.5)),(root.center_y-(401*0.5))
+                source:'img/turtlecoin_symbol_white@2x.png'
+				
+				
+#general button properties
+<MyButton@Button>:
+    color: 250/255,197/255,195/255,0.8
+    background_color: (33/255,38/255,33/255,1) if self.state == 'normal' else (0.6,0,0.7,0.5)
+    halign:'center'
+    valign:'center'
+    text_size: self.size
+    bold:True
+    font_name: 'RobotoMono-Regular'
+	
+<MyLabel@Label>:
+	halign:'center'
+	valign:'middle'
+	text_size:self.width-30,self.height
+	font_size: 16
+	color:250/255,197/255,195/255,0.8
+	font_name: 'RobotoMono-Regular'
+
+<BottomButton@MyButton>:
+	size_hint:0.07,1
+	
+<BottomBar@RelativeLayout>:
+	size_hint:1, 0.04
+	pos_hint: {"x":0, "y":0}
+    canvas.before:
+        Color:
+            rgba: 64/255, 193/255, 142/255, 0.8
+        Rectangle:
+            size: self.size
+    Label:
+    	id: synch_stat_label
+        size_hint:1, 1
+		pos_hint: {"x":0, "y":0}
+    	font_size: 12
+		halign:'left'
+        valign:'center'
+        text_size: self.size
+    	text: app.sync_status
+    	font_name: 'RobotoMono-Regular'
+
+	BottomButton:
+		pos_hint:{"x":0.79,"y":0}
+		text: "Tx & Blocks"
+		font_size: 12
+		on_release:app.root.current = 'mainscreen'
+	BottomButton:
+		pos_hint:{"x":0.86,"y":0}
+		text: "Search"
+		on_release:app.root.current = 'searchscreen'
+	#BottomButton:
+		#pos_hint:{"x":0.86,"y":0}
+		#text: "Log"
+		#on_release:app.root.current = 'daemonscreen'
+
+	BottomButton:
+		pos_hint:{"x":0.93,"y":0}
+		text: "Exit"
+		on_release: app.quitApp()
+
+<TopBarBackground@RelativeLayout>:
+    canvas.before:
+        Color:
+            rgba: 64/255, 193/255, 142/255, 0.8
+        Rectangle:
+            size: self.size
+
+<CenteredTextInput@TextInput>:
+	multiline:False
+	background_color: 250/255,197/255,195/255,0.7
+	cursor_color: 1,1,1,1
+	font_size: 15
+	hint_text_color: 0,0,0,0.4
+	on_text: root.update_padding()
+	padding_x: (self.width - self.text_width)/2
+	font_name: 'RobotoMono-Regular'
+	
+
+<ScrollViewTemplate@ScrollView>:
+	do_scroll_x:False
+	canvas.before:
+		Color:
+			#rgba: 0/255,133/255,61/255,0
+			rgba: 0,0,0,0.3
+		Rectangle:
+			size: self.size
+			pos: self.pos
+
+<LoadingPopup>:
+	size_hint: 0.3,0.2
+	auto_dismiss: False
+	title: "Initializing Daemon..."
+	Label:
+		size_hint:1,1
+		pos_hint:{"x":0,"y":0}
+		text: "Please Wait..."
+		font_name: 'RobotoMono-Regular'
+<ErrorPopUp>:
+	size_hint: 0.4,0.4
+	auto_dismiss: False
+	title: "Error"
+	FloatLayout:
+		Label:
+			size_hint:1,0.9
+			pos_hint:{"x":0,"y":0}
+			text: app.error_msg
+			font_name: 'RobotoMono-Regular'
+		Button:
+			size_hint:0.6,0.1
+			pos_hint:{"x":0.2,"y":0}
+			text: 'Close'	
+			on_release: root.dismiss()
+
+<DataListTemplate@GridLayout>:
+	cols: 1
+	size_hint: 1,None
+	height: self.minimum_height
+
+#table label general properties
+<TableItem@Label>:
+	color: 250/255,197/255,195/255,0.8
+	halign:'center'
+	valign:'center'
+	font_size: 13
+	size_hint_y: None
+	text_size: self.width, None
+	height: self.texture_size[1]
+	font_name: 'RobotoMono-Regular'
+
+#txpoolData layout
+<TxPoolData>:
+	size_hint_x: 1
+	size_hint_y: None
+	height: 50
+	txp_amount:txp_amount
+	txp_fee:txp_fee
+	txp_size:txp_size
+	txp_hash:txp_hash
+	colors: (0, 0, 0, 0.65)
+	canvas.before:
+		Color:
+			rgba: self.colors
+		Rectangle:
+			size: self.size
+	TableItem:
+		id:txp_amount
+		name:"txp_amount"
+		pos_hint:{"x":0,"y":0}
+		size_hint:0.125,1
+
+	TableItem:
+		id:txp_fee
+		name:"txp_fee"
+		pos_hint:{"x":0.125,"y":0}
+		size_hint:0.1,1
+
+	TableItem:
+		id:txp_size
+		name:"txp_size"
+		pos_hint:{"x":0.225,"y":0}
+		size_hint:0.1,1
+
+	TableItem:
+		id:txp_hash
+		name:"txp_hash"
+		pos_hint:{"x":0.325,"y":0}
+		size_hint:0.675,1
+
+#tableheader label general properties
+<TableHeaderItem@Label>:
+	color: 0,0,0,0.8
+	halign:'center'
+	valign:'center'
+	font_size: 14
+	font_name: 'RobotoMono-Regular'
+
+#Txpool tableheader layout
+<TxPoolTableHeader@RelativeLayout>:
+    size_hint:0.4,0.025
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 0.8
+        Rectangle:
+            size: self.size
+	TableHeaderItem:
+		pos_hint:{"x":0,"y":0}
+		size_hint:0.125,1
+		text:"Amount"
+	TableHeaderItem:
+		pos_hint:{"x":0.125,"y":0}
+		size_hint:0.1,1
+		text:"Fee"
+	TableHeaderItem:
+		pos_hint:{"x":0.225,"y":0}
+		size_hint:0.1,1
+		text:"Size"
+	TableHeaderItem:
+		pos_hint:{"x":0.325,"y":0}
+		size_hint:0.675,1
+		text:"Hash"	
+
+#Recent tableheader layout
+<RecentBlockTableHeader@RelativeLayout>:
+    size_hint:0.6,0.025
+    canvas.before:
+        Color:
+            rgba: 0.5, 0.5, 0.5, 0.8
+        Rectangle:
+            size: self.size
+	TableHeaderItem:
+		pos_hint:{"x":0,"y":0}
+		size_hint:0.1,1
+		text:"Height"
+	TableHeaderItem:
+		pos_hint:{"x":0.1,"y":0}
+		size_hint:0.075,1
+		text:"Size"
+	TableHeaderItem:
+		pos_hint:{"x":0.175,"y":0}
+		size_hint:0.45,1
+		text:"Block Hash"
+	TableHeaderItem:
+		pos_hint:{"x":0.625,"y":0}
+		size_hint:0.12,1
+		text:"Difficulty"
+	TableHeaderItem:
+		pos_hint:{"x":0.745,"y":0}
+		size_hint:0.055,1
+		text:"Tx"
+	TableHeaderItem:
+		pos_hint:{"x":0.8,"y":0}
+		size_hint:0.2,1
+		text:"Date & Time"
+
+#recentblockData layout
+<RecentBlockData>:
+	size_hint_x: 1
+	size_hint_y: None
+	height: 50
+	rctblk_height:rctblk_height
+	rctblk_size:rctblk_size
+	rctblk_hash:rctblk_hash
+	rctblk_difficulty:rctblk_difficulty
+	rctblk_tx:rctblk_tx
+	rctblk_datetime:rctblk_datetime
+	colors: (0, 0, 0, 0.65)
+	canvas.before:
+		Color:
+			rgba: self.colors
+		Rectangle:
+			size: self.size
+	TableItem:
+		id:rctblk_height
+		name:"rctblk_height"
+		pos_hint:{"x":0,"y":0}
+		size_hint:0.1,1
+	TableItem:
+		id:rctblk_size
+		name:"rctblk_size"
+		pos_hint:{"x":0.1,"y":0}
+		size_hint:0.075,1
+	TableItem:
+		id:rctblk_hash
+		name:"rctblk_hash"
+		pos_hint:{"x":0.175,"y":0}
+		size_hint:0.45,1
+	TableItem:
+		id:rctblk_difficulty
+		name:"rctblk_difficulty"
+		pos_hint:{"x":0.625,"y":0}
+		size_hint:0.12,1
+	TableItem:
+		id:rctblk_tx
+		name:"rctblk_tx"
+		pos_hint:{"x":0.745,"y":0}
+		size_hint:0.055,1
+	TableItem:
+		id:rctblk_datetime
+		name:"rctblk_datetime"
+		pos_hint:{"x":0.8,"y":0}
+		size_hint:0.2,1
+
+#BigLabel
+<BigLabel>:
+	size_hint: 1, None
+	height : 40
+	halign:'left'
+	valign:'middle'
+	text_size:self.width-30,self.height
+	font_size: 24
+	color:1,1,1,1
+	markup: True
+		
+#SmallLabel
+<SmallLabel>:
+	size_hint: 1, None
+	height : 30
+	halign:'left'
+	valign:'middle'
+	text_size:self.width-30,self.height
+	font_size: 13
+	color:1,1,1,1
+	markup: True
+
+#TX Inputs layout		
+<TXInputs>:
+	input_amount:input_amount
+	input_image:input_image
+	size_hint_x: 1
+	size_hint_y: None
+	height: 35
+	colors: (0.5, 0.5, 0.5, 0.5)
+	canvas.before:
+		Color:
+			rgba: self.colors
+		Rectangle:
+			size: self.size
+	Label:
+		id: input_amount
+		pos_hint:{"x":0,"y":0}
+		size_hint: 0.25, 1	
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+
+	Label:
+		id: input_image
+		pos_hint:{"x":0.25,"y":0}
+		size_hint: 0.75, 1
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+		
+#TX Outputs layout		
+<TXOutputs>:
+	output_amount:output_amount
+	output_key:output_key
+	size_hint_x: 1
+	size_hint_y: None
+	height: 40
+	colors: (0.5, 0.5, 0.5, 0.5)
+	canvas.before:
+		Color:
+			rgba: self.colors
+		Rectangle:
+			size: self.size
+	Label:
+		id: output_amount
+		pos_hint:{"x":0,"y":0}
+		size: 0.25, 1
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+
+	Label:
+		id: output_key
+		pos_hint:{"x":0.25,"y":0}
+		size: 0.75, 1
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+
+
+#BlkSearchData layout
+<BlkSearchData>:
+	blkResultItem1:blkResultItem1
+	blkResultItem2:blkResultItem2
+	size_hint_x: 1
+	size_hint_y: None
+	height: 40
+	colors: (0.5, 0.5, 0.5, 0)
+	canvas.before:
+		Color:
+			rgba: self.colors
+		Rectangle:
+			size: self.size
+	SmallLabel:
+		id:blkResultItem1
+		size_hint:0.5,1
+		pos_hint:{"x":0,"y":0}
+	SmallLabel:
+		id:blkResultItem2
+		size_hint:0.5,1
+		pos_hint:{"x":0.5,"y":0}
+		
+#Block search txs info
+<BlkSearchTx>:
+	tx_hash:tx_hash
+	tx_fee:tx_fee
+	tx_totalAmount:tx_totalAmount
+	tx_Size:tx_Size
+	size_hint_x: 1
+	size_hint_y: None
+	height: 40
+	colors: (0.5, 0.5, 0.5, 0.5)
+	canvas.before:
+		Color:
+			rgba: self.colors
+		Rectangle:
+			size: self.size
+	Label:
+		id: tx_hash
+		pos_hint:{"x":0,"y":0}
+		size_hint: 0.5, 1	
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+	Label:
+		id: tx_fee
+		pos_hint:{"x":0.5,"y":0}
+		size_hint: 0.15, 1	
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+	Label:
+		id: tx_totalAmount
+		pos_hint:{"x":0.65,"y":0}
+		size_hint: 0.25, 1	
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+	Label:
+		id: tx_Size
+		pos_hint:{"x":0.9,"y":0}
+		size_hint: 0.1, 1	
+		halign:'left'
+		valign:'middle'
+		text_size:self.width-30,self.height
+		font_size: 13
+		color:0,0,0,1
+
+#----------------------------------------------------------------------
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#########################################################################################
+#-----app starts here -------------------------------------------------
+
+<StartScreen>:
+	ip_input:ip_input
+
+    BackGround:
+		MyContainer
+
+		MyLabel:
+			id: IP_label
+			size_hint:0.3, 0.15
+			pos_hint: {"x":0.35,"y":0.75}
+			text: "Connect your local explorer at:"
+			bold: True
+
+		CenteredTextInput:
+			id: ip_input
+			size_hint:0.3,0.05
+			pos_hint:{"x":0.35,"y":0.75}
+			readonly: True
+			text: app.daemon_address
+
+#		MyLabel:
+#			id: dir_label
+#			size_hint:0.3, 0.15
+#			pos_hint: {"x":0.35,"y":0.5}
+#			text: "Blockchain Directory"
+#			bold: True
+#		CenteredTextInput:
+#			id: dir_input
+#			size_hint:0.23,0.05
+#			pos_hint:{"x":0.35,"y":0.5}
+#		MyButton:
+#			text:"Change"
+#			size_hint:0.07,0.05
+#			pos_hint:{"x":0.58,"y":0.5}
+
+		MyButton:
+			text:"Start Explorer"
+			pos_hint: {"x":0.4, "y":0.05}
+			size_hint: 0.2,0.075
+			on_release: app.establish_connection()
+
+		
+<MainScreen>:
+	txp_datalistTemplate:txp_datalistTemplate
+	rctblk_datalistTemplate:rctblk_datalistTemplate
+    BackGround:
+		TopBarBackground:
+			size_hint:0.4,0.04
+			pos_hint:{"x":0,"y":0.96}
+			Label:
+				text: "Transaction Pool"
+				font_name: 'RobotoMono-Regular'	
+		TxPoolTableHeader:
+			pos_hint:{"x":0,"y":0.935}
+		ScrollViewTemplate:
+			id:txp_scrollview
+			size_hint:0.4,0.895
+			pos_hint:{"x":0,"y":0.04}
+			DataListTemplate:
+				id:txp_datalistTemplate
+				pos_hint:{'x':0,'y':0}
+
+		TopBarBackground:
+			size_hint:0.6,0.04
+			pos_hint:{"x":0.4,"y":0.96}
+			Label:
+				text: "Recent Blocks"
+				font_name: 'RobotoMono-Regular'
+		RecentBlockTableHeader:
+			pos_hint:{"x":0.4,"y":0.935}
+		ScrollViewTemplate:
+			id:rctblk_scrollview
+			size_hint:0.6,0.895
+			pos_hint:{"x":0.4,"y":0.04}
+			DataListTemplate:
+				id:rctblk_datalistTemplate
+				pos_hint:{'x':0,'y':0}
+		BottomBar
+
+<SearchScreen>:
+	blksearch_display:blksearch_display
+	txsearch_display:txsearch_display
+	search_tx_input:search_tx_input
+	search_block_input:search_block_input
+	BackGround:
+		TopBarBackground:
+			size_hint:1,0.04
+			pos_hint:{"x":0,"y":0.96}
+		TextInput:
+			id: search_tx_input
+			size_hint:0.47,0.04
+			pos_hint:{"x":0,"y":0.96}
+			hint_text: "Search Transaction"
+		MyButton:
+			id: search_tx_button
+			size_hint:0.03,0.04
+			pos_hint:{"x":0.47,"y":0.96}
+			text: "Go"
+			on_release:app.TxSchThread()
+		ScrollViewTemplate:
+			size_hint:0.5,0.92
+			pos_hint:{"x":0,"y":0.04}
+			GridLayout:
+				id:txsearch_display
+				cols: 1
+				size_hint: 1,None
+				height: self.minimum_height
+		TextInput:
+			id: search_block_input
+			size_hint:0.47,0.04
+			pos_hint:{"x":0.5,"y":0.96}
+			hint_text: "Search Block"
+		MyButton:
+			id: search_block_button
+			size_hint:0.03,0.04
+			pos_hint:{"x":0.97,"y":0.96}
+			text: "Go"
+			on_release:app.BlkSchThread()
+
+		ScrollViewTemplate:
+			size_hint:0.5,0.92
+			pos_hint:{"x":0.5,"y":0.04}
+			GridLayout:
+				id:blksearch_display
+				cols: 1
+				size_hint: 1,None
+				height: self.minimum_height
+		BottomBar
+
+<DaemonScreen>:
+	bottom_label:bottom_label
+	scroll_txtinput:scroll_txtinput
+	daemon_info:daemon_info
+	BackGround:
+		ScrollViewTemplate:
+			id: scroll_txtinput
+			size_hint:1,0.96
+			pos_hint:{"x":0,"y":0.04}
+			TextInput:
+				id: daemon_info
+				multiline:True
+				background_color: 0,0,0,0.5
+				cursor_color: 1,1,1,0
+				font_size: 15
+				foreground_color: 250/255,197/255,195/255,0.8
+				size_hint: 1,None
+				pos_hint: {"x":0,"y":0}
+				height: max(self.minimum_height, scroll_txtinput.height)
+				readonly: True
+				font_name: 'RobotoMono-Regular'
+				Label:  #this label is used for scroll_to to keep the view at bottom
+					id: bottom_label
+					size: 10,10
+					pos_hint: {"x":0,"y":0} 
+		BottomBar
+	
